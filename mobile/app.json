@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Chit Fund",
+    "slug": "chitfund-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F1629"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.chitfund.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F1629"
+      },
+      "package": "com.chitfund.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#6C63FF",
+          "sounds": []
+        }
+      ]
+    ],
+    "scheme": "chitfund",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
