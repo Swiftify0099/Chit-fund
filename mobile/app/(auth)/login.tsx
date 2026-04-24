@@ -28,8 +28,17 @@ export default function LoginScreen() {
       await login(phone.trim(), password);
       // Navigation handled by _layout.tsx
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || "Login failed. Check your credentials.";
-      Alert.alert("Login Failed", msg);
+      let msg = `Unexpected Error: ${err.message || "Unknown error"}`;
+      if (err.message === "Network Error" || err.code === "ECONNABORTED") {
+        msg = "Network Error: Could not connect to the backend. Please check your BASE_URL in api.ts.";
+      } else if (err?.response?.headers?.["content-type"]?.includes("text/html")) {
+        msg = "GitHub Codespaces is blocking the request. Please go to the 'Ports' tab and set Port 8000 to 'Public'.";
+      } else if (err?.response?.data?.detail) {
+        msg = typeof err.response.data.detail === "string" 
+          ? err.response.data.detail 
+          : JSON.stringify(err.response.data.detail);
+      }
+      Alert.alert("Login Failed", `${msg}\n\nURL Attempted:\n${err?.config?.baseURL || "Unknown URL"}`);
     } finally {
       setLoading(false);
     }

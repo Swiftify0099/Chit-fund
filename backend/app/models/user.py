@@ -26,7 +26,7 @@ class User(Base):
 
     # Relationships
     shares = relationship("Share", back_populates="user", uselist=False)
-    loan_requests = relationship("LoanRequest", back_populates="user")
+    loan_requests = relationship("LoanRequest", back_populates="user", primaryjoin="User.id == LoanRequest.user_id")
     loans = relationship("Loan", back_populates="user")
     banner_views = relationship("BannerView", back_populates="user")
-    notifications = relationship("Notification", back_populates="user", foreign_keys="Notification.user_id")
+    notifications = relationship("Notification", back_populates="user", primaryjoin="User.id == Notification.user_id")

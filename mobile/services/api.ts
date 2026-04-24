@@ -1,7 +1,9 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-export const BASE_URL = "http://192.168.1.100:8000"; // ← change to your backend IP
+// If using GitHub Codespaces, change this to your forwarded port URL (e.g., "https://<codespace-name>-8000.app.github.dev")
+// If running locally on Wi-Fi, change to your computer's IPv4 address.
+export const BASE_URL = "https://glorious-xylophone-69v5vx7xjqgrcxq6w-8000.app.github.dev"; // Ensure there is no trailing slash (/)
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -11,8 +13,12 @@ const api = axios.create({
 
 // Attach JWT token to every request
 api.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync("access_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  try {
+    const token = await SecureStore.getItemAsync("access_token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  } catch (error) {
+    console.warn("SecureStore Error:", error);
+  }
   return config;
 });
 

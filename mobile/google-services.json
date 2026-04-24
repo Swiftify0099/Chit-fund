@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1057791802035",
+    "project_id": "chit-fund-e27d6",
+    "storage_bucket": "chit-fund-e27d6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1057791802035:android:b767bcf0b9515963bb8ec6",
+        "android_client_info": {
+          "package_name": "Chit.fund"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-U9SF-M47xHBmiUR1zW6ihgN59Hxlcyg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -87,6 +87,14 @@ def list_notifications(db: Session = Depends(get_db), _=Depends(require_admin)):
     return db.query(Notification).order_by(Notification.sent_at.desc()).limit(100).all()
 
 
+@router.get("/my", response_model=List[NotificationOut])
+def list_my_notifications(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    return db.query(Notification).filter(
+        (Notification.target == NotificationTarget.all) | 
+        ((Notification.target == NotificationTarget.user) & (Notification.user_id == current_user.id))
+    ).order_by(Notification.sent_at.desc()).limit(50).all()
+
+
 @router.patch("/fcm-token")
 def update_fcm_token(
     token: str,

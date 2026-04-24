@@ -11,6 +11,23 @@ from app.schemas.user import LoginRequest, TokenResponse, RefreshRequest
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
+@router.post("/seed-admin")
+def seed_admin(db: Session = Depends(get_db)):
+    if db.query(User).count() > 0:
+        return {"message": "Admin already exists"}
+    
+    admin_user = User(
+        name="Super Admin",
+        phone="0000000000",
+        password_hash=hash_password("admin123"),
+        role="admin",
+        is_active=True
+    )
+    db.add(admin_user)
+    db.commit()
+    return {"message": "Admin user created! You can now login with phone: 0000000000 and password: admin123"}
+
+
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.phone == payload.phone, User.is_active == True).first()

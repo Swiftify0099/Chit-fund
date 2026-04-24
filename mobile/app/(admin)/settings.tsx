@@ -5,15 +5,18 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
-import { notificationApi } from "@/services/api";
+import { notificationApi, themeApi, adminApi } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 
 const NOTIF_TYPES = ["announcement", "emi_reminder", "payment_due", "loan_approved", "loan_rejected"];
 
 export default function AdminSettings() {
+  const { logout } = useAuth();
   const { theme, themes, loadAllThemes, activateTheme } = useTheme();
   const [notifModal, setNotifModal] = useState(false);
   const [notifForm, setNotifForm] = useState({ title: "", body: "", target: "all", user_id: "", type: "announcement" });
   const [sending, setSending] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => { loadAllThemes(); }, []);
 
@@ -33,12 +36,35 @@ export default function AdminSettings() {
     } finally { setSending(false); }
   };
 
+  const openNotifModal = async () => {
+    setNotifModal(true);
+    try {
+      const res = await adminApi.listUsers();
+      setUsers(res.data);
+    } catch (e) {
+      console.log("Failed to load users for notification modal", e);
+    }
+  };
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: theme.bg_color }}>
       {/* Header */}
-      <View className="px-6 pt-14 pb-6" style={{ backgroundColor: "#1A2240" }}>
-        <Text className="text-2xl font-bold" style={{ color: theme.text_color }}>Settings</Text>
-        <Text className="text-sm mt-1" style={{ color: theme.text_color + "88" }}>Theme, Notifications & More</Text>
+      <View className="px-6 pt-14 pb-6 flex-row justify-between items-center" style={{ backgroundColor: "#1A2240" }}>
+        <View>
+          <Text className="text-2xl font-bold" style={{ color: theme.text_color }}>Settings</Text>
+          <Text className="text-sm mt-1" style={{ color: theme.text_color + "88" }}>Theme, Notifications & More</Text>
+        </View>
+        <TouchableOpacity
+          className="px-4 py-2 rounded-xl bg-red-500"
+          onPress={() => {
+            Alert.alert("Logout", "Are you sure you want to logout?", [
+              { text: "Cancel", style: "cancel" },
+              { text: "Logout", style: "destructive", onPress: logout }
+            ]);
+          }}
+        >
+          <Text className="font-bold text-white">Logout</Text>
+        </TouchableOpacity>
       </View>
 
       <View className="px-4 pt-4">
@@ -49,7 +75,7 @@ export default function AdminSettings() {
               <Text className="font-bold text-base" style={{ color: theme.text_color }}>Push Notifications</Text>
               <Text className="text-xs mt-1" style={{ color: theme.text_color + "77" }}>Send FCM to users</Text>
             </View>
-            <TouchableOpacity className="px-4 py-2 rounded-xl flex-row items-center" style={{ backgroundColor: theme.highlight_color }} onPress={() => setNotifModal(true)}>
+            <TouchableOpacity className="px-4 py-2 rounded-xl flex-row items-center" style={{ backgroundColor: theme.highlight_color }} onPress={openNotifModal}>
               <Ionicons name="notifications" size={16} color="#fff" />
               <Text className="text-white font-bold ml-2 text-sm">Send</Text>
             </TouchableOpacity>
@@ -57,29 +83,70 @@ export default function AdminSettings() {
         </View>
 
         {/* Theme Section */}
-        <Text className="text-lg font-bold mb-3 px-1" style={{ color: theme.text_color }}>Color Theme</Text>
+        <View className="flex-row justify-between items-center mb-3 px-1 mt-4">
+          <Text className="text-lg font-bold" style={{ color: theme.text_color }}>Color Theme</Text>
+          {themes.length === 0 && (
+            <TouchableOpacity
+              className="px-3 py-1.5 rounded-lg"
+              style={{ backgroundColor: theme.highlight_color }}
+              onPress={async () => {
+                try {
+                  await themeApi.seedDefaults();
+                  Alert.alert("Success", "10 Premium default themes seeded!");
+                  loadAllThemes();
+                } catch (e) {
+                  Alert.alert("Error", "Failed to seed themes.");
+                }
+              }}
+            >
+              <Text className="text-xs font-bold text-white">✨ Seed Themes</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {themes.length === 0 && (
           <View className="rounded-2xl p-4 mb-4 items-center" style={{ backgroundColor: "#1A2240" }}>
-            <Text className="text-sm" style={{ color: theme.text_color + "88" }}>Loading themes...</Text>
+            <Text className="text-sm text-center" style={{ color: theme.text_color + "88" }}>
+              No themes found. Tap the 'Seed Themes' button above to load professional defaults.
+            </Text>
           </View>
         )}
         {themes.map((t) => (
           <TouchableOpacity
             key={t.id}
-            className="rounded-2xl p-4 mb-3 flex-row items-center"
-            style={{ backgroundColor: "#1A2240", borderWidth: t.is_active ? 2 : 0, borderColor: theme.highlight_color }}
+            className="rounded-2xl p-4 mb-3 flex-row items-center justify-between"
+            style={{
+              backgroundColor: t.bg_color || "#1A2240",
+              borderWidth: 2,
+              borderColor: t.is_active ? t.highlight_color : "transparent",
+              shadowColor: t.highlight_color || "#000",
+              shadowOpacity: t.is_active ? 0.3 : 0.1,
+              shadowRadius: 8,
+              elevation: t.is_active ? 8 : 2,
+            }}
             onPress={() => activateTheme(t.id)}
           >
-            <View className="flex-row gap-2 mr-4">
-              {[t.bg_color, t.highlight_color, t.text_color].map((c, i) => (
-                <View key={i} className="w-6 h-6 rounded-full" style={{ backgroundColor: c, borderWidth: 1, borderColor: "#ffffff22" }} />
-              ))}
+            <View className="flex-row items-center flex-1">
+              <View
+                className="w-12 h-12 rounded-full mr-4 border-2 shadow-sm"
+                style={{ backgroundColor: t.highlight_color || '#ccc', borderColor: t.text_color || '#000' }}
+              />
+              <View className="flex-1">
+                <Text className="font-bold text-base" style={{ color: t.text_color || '#000' }}>
+                  {t.name}
+                </Text>
+                <Text className="text-xs mt-0.5 font-medium" style={{ color: t.text_color ? t.text_color + "cc" : '#666' }}>
+                  Bg: {t.bg_color} • Accent: {t.highlight_color}
+                </Text>
+              </View>
             </View>
-            <View className="flex-1">
-              <Text className="font-bold" style={{ color: theme.text_color }}>{t.name}</Text>
-              <Text className="text-xs mt-0.5" style={{ color: theme.text_color + "77" }}>{t.bg_color} • {t.highlight_color}</Text>
-            </View>
-            {t.is_active && <Ionicons name="checkmark-circle" size={22} color={theme.highlight_color} />}
+            {t.is_active ? (
+              <View className="px-3 py-1.5 rounded-xl" style={{ backgroundColor: (t.highlight_color || '#000') + "22" }}>
+                <Text className="font-bold text-xs" style={{ color: t.highlight_color || '#000' }}>Active</Text>
+              </View>
+            ) : (
+              <Ionicons name="checkmark-circle-outline" size={24} color={t.text_color + "44"} />
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -101,8 +168,22 @@ export default function AdminSettings() {
             </View>
             {notifForm.target === "user" && (
               <View className="mb-4">
-                <Text className="text-sm mb-2" style={{ color: theme.text_color + "BB" }}>User ID</Text>
-                <TextInput className="rounded-xl px-4 h-12 text-sm" style={{ backgroundColor: "#232E4A", color: theme.text_color }} placeholder="Enter user ID" placeholderTextColor={theme.text_color + "44"} keyboardType="numeric" value={notifForm.user_id} onChangeText={(v) => setNotifForm(f => ({ ...f, user_id: v }))} />
+                <Text className="text-sm mb-2" style={{ color: theme.text_color + "BB" }}>Select User</Text>
+                <View className="max-h-48 rounded-xl overflow-hidden" style={{ backgroundColor: "#232E4A" }}>
+                  <ScrollView nestedScrollEnabled>
+                    {users.map(u => (
+                      <TouchableOpacity 
+                        key={u.id} 
+                        className="p-3 border-b border-gray-700 flex-row justify-between items-center"
+                        style={{ backgroundColor: notifForm.user_id === u.id.toString() ? theme.highlight_color + "44" : "transparent" }}
+                        onPress={() => setNotifForm(f => ({ ...f, user_id: u.id.toString() }))}
+                      >
+                        <Text style={{ color: theme.text_color }}>{u.phone} {u.name ? `(${u.name})` : ""}</Text>
+                        {notifForm.user_id === u.id.toString() && <Ionicons name="checkmark" color={theme.highlight_color} size={16} />}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
               </View>
             )}
             {/* Type */}

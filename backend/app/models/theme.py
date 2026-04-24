@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -42,8 +42,8 @@ class BannerView(Base):
     __tablename__ = "banner_views"
 
     id = Column(Integer, primary_key=True, index=True)
-    banner_id = Column(Integer, nullable=False)
-    user_id = Column(Integer, nullable=True)
+    banner_id = Column(Integer, ForeignKey("banners.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     session_id = Column(String(200), nullable=True)
     device_info = Column(String(300), nullable=True)
     viewed_at = Column(DateTime(timezone=True), server_default=func.now())

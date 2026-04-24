@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#0F1629"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.chitfund.app"
@@ -21,7 +23,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F1629"
       },
-      "package": "com.chitfund.app"
+      "package": "Chit.fund",
+      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-router",
@@ -38,6 +41,12 @@
     "scheme": "chitfund",
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a08a8f59-3a7c-4243-a997-4cfe437ec3ea"
+      }
     }
   }
 }

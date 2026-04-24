@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+ import * as Notifications from "expo-notifications";
+import { Platform, Alert } from "react-native";
 import { userApi } from "@/services/api";
 
 Notifications.setNotificationHandler({
@@ -13,8 +13,9 @@ Notifications.setNotificationHandler({
 });
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
-  if (!Device.isDevice) {
-    console.log("Push notifications only work on physical devices");
+  // Android Emulators support FCM, so we only restrict iOS Simulators
+  if (!Device.isDevice && Platform.OS === "ios") {
+    console.log("Push notifications only work on physical devices for iOS");
     return null;
   }
 
@@ -40,9 +41,14 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     });
   }
 
-  // Get Expo push token (for Expo notifications service)
-  const token = (await Notifications.getExpoPushTokenAsync()).data;
-  return token;
+  try {
+    // Get Device push token (Native FCM token for Firebase directly)
+    const token = (await Notifications.getDevicePushTokenAsync()).data;
+    return token;
+  } catch (error) {
+    console.log("Error getting push token:", error);
+    return null;
+  }
 }
 
 export function useNotifications(isAuthenticated: boolean) {
@@ -65,6 +71,12 @@ export function useNotifications(isAuthenticated: boolean) {
     // Listen for received notifications
     notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
       console.log("Notification received:", notification);
+      
+      // Display an alert so the notification is visible in the foreground
+      const { title, body } = notification.request.content;
+      if (title || body) {
+        Alert.alert(title || "New Notification", body || "");
+      }
     });
 
     // Listen for user tapping notification
@@ -73,8 +85,12 @@ export function useNotifications(isAuthenticated: boolean) {
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener.current);
-      Notifications.removeNotificationSubscription(responseListener.current);
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
     };
   }, [isAuthenticated]);
 }
