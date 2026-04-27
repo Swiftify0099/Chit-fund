@@ -1,9 +1,21 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-// If using GitHub Codespaces, change this to your forwarded port URL (e.g., "https://<codespace-name>-8000.app.github.dev")
-// If running locally on Wi-Fi, change to your computer's IPv4 address.
-export const BASE_URL = "https://glorious-xylophone-69v5vx7xjqgrcxq6w-8000.app.github.dev"; // Ensure there is no trailing slash (/)
+// Get the backend URL - supports both tunnel and local development
+const getBackendURL = (): string => {
+  // Check for environment variable first (set by run_project.sh)
+  if (process.env.EXPO_PUBLIC_BACKEND_URL) {
+    console.log("Using backend URL from env:", process.env.EXPO_PUBLIC_BACKEND_URL);
+    return process.env.EXPO_PUBLIC_BACKEND_URL;
+  }
+  
+  // Default Codespace URL (update YOUR_CODESPACE_NAME)
+  const defaultURL = "https://glorious-xylophone-69v5vx7xjqgrcxq6w-8000.app.github.dev";
+  console.log("Using default backend URL:", defaultURL);
+  return defaultURL;
+};
+
+export const BASE_URL = getBackendURL();
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -11,22 +23,44 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Attach JWT token to every request
+// Debug logging for requests
 api.interceptors.request.use(async (config) => {
   try {
     const token = await SecureStore.getItemAsync("access_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    
+    console.log("📤 API Request:", {
+      url: config.url,
+      method: config.method,
+      baseURL: config.baseURL,
+    });
   } catch (error) {
     console.warn("SecureStore Error:", error);
   }
   return config;
 });
 
-// Auto-refresh on 401
+// Auto-refresh on 401 and log errors
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    console.log("✅ API Response:", {
+      url: res.config.url,
+      status: res.status,
+    });
+    return res;
+  },
   async (error) => {
     const originalRequest = error.config;
+    
+    // Log error details for debugging
+    console.error("❌ API Error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.message,
+      contentType: error.response?.headers?.["content-type"],
+      response: error.response?.data,
+    });
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {

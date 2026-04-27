@@ -20,9 +20,7 @@ start "Chit Fund Backend" cmd /k "cd backend && venv\Scripts\python -m uvicorn a
 
 :: 2. Start Mobile in a new window
 echo [2/2] Launching Mobile (Expo)...
-:: In a cloud environment like Codespaces, it's best to avoid tunneling (--tunnel)
-:: and use the built-in port forwarding on port 8081 instead. The --go flag is also deprecated.
-start "Chit Fund Mobile" cmd /k "cd mobile && npx expo start -c"
+start "Chit Fund Mobile" cmd /k "cd mobile && npx expo start -c --tunnel --go"
 
 echo.
 echo ======================================================

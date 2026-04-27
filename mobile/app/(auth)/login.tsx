@@ -28,17 +28,36 @@ export default function LoginScreen() {
       await login(phone.trim(), password);
       // Navigation handled by _layout.tsx
     } catch (err: any) {
-      let msg = `Unexpected Error: ${err.message || "Unknown error"}`;
-      if (err.message === "Network Error" || err.code === "ECONNABORTED") {
-        msg = "Network Error: Could not connect to the backend. Please check your BASE_URL in api.ts.";
-      } else if (err?.response?.headers?.["content-type"]?.includes("text/html")) {
-        msg = "GitHub Codespaces is blocking the request. Please go to the 'Ports' tab and set Port 8000 to 'Public'.";
-      } else if (err?.response?.data?.detail) {
+      console.error("Login Error Details:", err);
+      
+      let msg = `Unknown Error: ${err.message || "Try again"}`;
+      
+      // Network connectivity issues
+      if (err.message === "Network Error" || err.code === "ECONNABORTED" || err.code === "ENOTFOUND") {
+        msg = "❌ Network Error: Cannot connect to backend.\n\n✅ Fix:\n1. Check Backend URL in api.ts\n2. Ensure Ports 8000 & 8081 are PUBLIC\n3. Verify Codespace is running";
+      }
+      // Port not public / blocked
+      else if (err?.response?.headers?.["content-type"]?.includes("text/html")) {
+        msg = "❌ Port Blocked: GitHub Codespaces access denied.\n\n✅ Fix:\n1. Go to 'Ports' tab in terminal area\n2. Right-click Port 8000 → Visibility → Public\n3. Right-click Port 8081 → Visibility → Public\n4. Retry login";
+      }
+      // API error response
+      else if (err?.response?.status === 422) {
+        msg = "❌ Invalid phone or password format.\n\n✅ Try:\n• Phone: 10 digit number\n• Password: Correct credentials";
+      }
+      else if (err?.response?.status === 401) {
+        msg = "❌ Invalid phone or password.";
+      }
+      else if (err?.response?.status >= 500) {
+        msg = `❌ Backend Server Error (${err.response.status}).\n\n✅ Try:\n• Restart backend\n• Check backend logs for errors`;
+      }
+      else if (err?.response?.data?.detail) {
         msg = typeof err.response.data.detail === "string" 
           ? err.response.data.detail 
           : JSON.stringify(err.response.data.detail);
       }
-      Alert.alert("Login Failed", `${msg}\n\nURL Attempted:\n${err?.config?.baseURL || "Unknown URL"}`);
+      
+      const debugInfo = `\n📍 Backend: ${err?.config?.baseURL || "Unknown"}\n⚠️ Status: ${err?.response?.status || err.code || "No connection"}`;
+      Alert.alert("🚨 Login Failed", msg + debugInfo);
     } finally {
       setLoading(false);
     }

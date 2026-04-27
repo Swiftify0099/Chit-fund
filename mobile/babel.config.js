@@ -4,13 +4,16 @@ module.exports = function (api) {
     presets: [
       ["babel-preset-expo", { 
         jsxImportSource: "nativewind",
-        reanimated: false,
-        worklets: false
       }],
       "nativewind/babel",
     ],
     plugins: [
-      'react-native-reanimated/plugin',
+      [
+        'react-native-reanimated/plugin',
+        {
+          relativeConfigPath: '../../tailwind.config.js',
+        },
+      ],
     ],
   };
 };

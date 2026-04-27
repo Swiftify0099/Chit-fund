@@ -26,8 +26,8 @@ function RootLayoutNav() {
   }, [isAuthenticated, isLoading, segments]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.bg_color }}>
-      <StatusBar style="light" backgroundColor={theme.bg_color} />
+    <View style={{ flex: 1, backgroundColor: theme?.bg_color || "#0F1629" }}>
+      <StatusBar style="light" backgroundColor={theme?.bg_color || "#0F1629"} />
       <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(admin)" />

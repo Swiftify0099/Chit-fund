@@ -66,7 +66,7 @@ Use the Swagger UI at `http://localhost:8000/docs`
 ## 📱 Mobile Setup
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20.19.4+
 - Expo CLI: `npm install -g expo-cli`
 - Android Studio / Xcode (for emulator) or Expo Go app
 
